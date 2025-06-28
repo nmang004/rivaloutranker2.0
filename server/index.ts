@@ -53,11 +53,16 @@ app.use(helmet({
 // CORS configuration
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? [process.env.FRONTEND_URL || 'https://rivaloutranker2.com']
+    ? [
+        process.env.FRONTEND_URL || 'https://rivaloutranker2.com',
+        'https://rivaloutranker20-production-up-railway-app.vercel.app',
+        'https://rivaloutranker20-production.vercel.app',
+        /\.vercel\.app$/
+      ]
     : ['http://localhost:3000', 'http://127.0.0.1:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-demo-user'],
 }));
 
 // Advanced threat detection and security

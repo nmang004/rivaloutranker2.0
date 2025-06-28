@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useWebSocketContext } from '@/components/providers/websocket-provider'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
@@ -104,10 +104,8 @@ export default function AuditorPage() {
 
     let auditId: string | null = null
 
-    // If WebSocket is connected, use real-time updates
-    if (isConnected) {
-      // Start the audit via API call (this would trigger the backend to start processing)
-      try {
+    // Try to start audit (always attempt, with or without WebSocket)
+    try {
         const token = localStorage.getItem('token')
         const headers: Record<string, string> = {
           'Content-Type': 'application/json'
@@ -121,7 +119,12 @@ export default function AuditorPage() {
           headers['x-demo-user'] = 'true'
         }
 
-        const response = await fetch('/api/audit', {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://rivaloutranker20-production.up.railway.app'
+        console.log('[Audit] Starting audit request to:', `${apiUrl}/api/audit`)
+        console.log('[Audit] Headers:', headers)
+        console.log('[Audit] Payload:', { url, type: analysisType, title: `SEO Audit - ${url}` })
+        
+        const response = await fetch(`${apiUrl}/api/audit`, {
           method: 'POST',
           headers,
           body: JSON.stringify({
@@ -136,89 +139,106 @@ export default function AuditorPage() {
           })
         })
 
+        console.log('[Audit] Response status:', response.status)
+        console.log('[Audit] Response headers:', Object.fromEntries(response.headers.entries()))
+
         if (!response.ok) {
-          throw new Error('Failed to start audit')
+          const errorText = await response.text()
+          console.error('[Audit] Error response:', errorText)
+          throw new Error(`Failed to start audit: ${response.status} ${errorText}`)
         }
 
         const result = await response.json()
+        console.log('[Audit] Success response:', result)
         auditId = result.auditId?.toString()
         setCurrentAuditId(auditId)
 
         if (auditId) {
-          // Subscribe to real-time progress updates after getting the audit ID
-          const unsubscribeProgress = subscribeToAuditProgress(auditId, (progress) => {
-            setCurrentStep(progress.currentStep || 0)
-            setSteps(prev => prev.map((step, index) => {
-              if (index === progress.currentStep) {
-                return { ...step, status: 'running', progress: progress.stepProgress || 0 }
-              } else if (index < (progress.currentStep || 0)) {
-                return { ...step, status: 'completed', progress: 100 }
-              }
-              return step
-            }))
-          })
+          if (isConnected) {
+            console.log('[Audit] Using WebSocket for real-time updates')
+            // Subscribe to real-time progress updates after getting the audit ID
+            const unsubscribeProgress = subscribeToAuditProgress(auditId, (progress) => {
+              setCurrentStep(progress.currentStep || 0)
+              setSteps(prev => prev.map((step, index) => {
+                if (index === progress.currentStep) {
+                  return { ...step, status: 'running', progress: progress.stepProgress || 0 }
+                } else if (index < (progress.currentStep || 0)) {
+                  return { ...step, status: 'completed', progress: 100 }
+                }
+                return step
+              }))
+            })
 
-          // Subscribe to completion
-          const unsubscribeComplete = subscribeToAuditComplete(auditId, (_result) => {
-            setSteps(prev => prev.map(step => ({ ...step, status: 'completed', progress: 100 })))
-            setTimeout(() => {
-              router.push(`/results/${auditId}`)
-            }, 1000)
-          })
+            // Subscribe to completion
+            const unsubscribeComplete = subscribeToAuditComplete(auditId, (_result) => {
+              setSteps(prev => prev.map(step => ({ ...step, status: 'completed', progress: 100 })))
+              setTimeout(() => {
+                router.push(`/results/${auditId}`)
+              }, 1000)
+            })
 
-          // Subscribe to errors
-          const unsubscribeError = subscribeToAuditError(auditId, (_error) => {
-            setSteps(prev => prev.map((step, index) => 
-              index === currentStep 
-                ? { ...step, status: 'error', progress: 0 }
-                : step
-            ))
-            setIsAnalyzing(false)
-          })
+            // Subscribe to errors
+            const unsubscribeError = subscribeToAuditError(auditId, (_error) => {
+              setSteps(prev => prev.map((step, index) => 
+                index === currentStep 
+                  ? { ...step, status: 'error', progress: 0 }
+                  : step
+              ))
+              setIsAnalyzing(false)
+            })
 
-          // Cleanup subscriptions when component unmounts or analysis completes
-          return () => {
-            unsubscribeProgress()
-            unsubscribeComplete()
-            unsubscribeError()
+            // Cleanup subscriptions when component unmounts or analysis completes
+            return () => {
+              unsubscribeProgress()
+              unsubscribeComplete()
+              unsubscribeError()
+            }
+          } else {
+            console.log('[Audit] WebSocket not connected, using polling fallback')
+            // Fallback to polling and simulation since WebSocket isn't available
+            simulateProgress(auditId)
           }
         }
-      } catch (error) {
-        console.error('Failed to start audit:', error)
-        setIsAnalyzing(false)
-      }
-    } else {
-      // Fallback to simulated progress if WebSocket is not connected
+    } catch (error) {
+      console.error('Failed to start audit:', error)
+      setIsAnalyzing(false)
+      
+      // Fallback to mock audit if API fails completely
       auditId = `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       setCurrentAuditId(auditId)
-      
-      for (let i = 0; i < steps.length; i++) {
-        setSteps(prev => prev.map((step, index) => 
-          index === i 
-            ? { ...step, status: 'running' } 
-            : index < i 
-              ? { ...step, status: 'completed', progress: 100 }
-              : step
-        ))
-        setCurrentStep(i)
+      console.log('[Audit] API failed, using simulation fallback')
+      simulateProgress(auditId)
+    }
+  }
 
-        for (let progress = 0; progress <= 100; progress += 10) {
-          await new Promise(resolve => setTimeout(resolve, 200))
-          setSteps(prev => prev.map((step, index) => 
-            index === i ? { ...step, progress } : step
-          ))
-        }
+  // Simulation function for when WebSocket or API fails
+  const simulateProgress = useCallback(async (auditId: string) => {
+    for (let i = 0; i < steps.length; i++) {
+      setSteps(prev => prev.map((step, index) => 
+        index === i 
+          ? { ...step, status: 'running' } 
+          : index < i 
+            ? { ...step, status: 'completed', progress: 100 }
+            : step
+      ))
+      setCurrentStep(i)
 
+      for (let progress = 0; progress <= 100; progress += 10) {
+        await new Promise(resolve => setTimeout(resolve, 200))
         setSteps(prev => prev.map((step, index) => 
-          index === i ? { ...step, status: 'completed', progress: 100 } : step
+          index === i ? { ...step, progress } : step
         ))
       }
 
-      setTimeout(() => {
-        router.push(`/results/${auditId}`)
-      }, 1000)
+      setSteps(prev => prev.map((step, index) => 
+        index === i ? { ...step, status: 'completed', progress: 100 } : step
+      ))
     }
-  }
+
+    setTimeout(() => {
+      router.push(`/results/${auditId}`)
+    }, 1000)
+  }, [steps.length, router])
 
   const totalFactors = steps.reduce((sum, step) => sum + step.factors, 0)
   const overallProgress = steps.reduce((sum, step) => sum + step.progress, 0) / steps.length

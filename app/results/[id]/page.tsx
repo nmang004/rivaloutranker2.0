@@ -184,7 +184,8 @@ export default function AuditResultsPage({ params: _params }: { params: { id: st
           headers['x-demo-user'] = 'true'
         }
 
-        const response = await fetch(`/api/audit/${auditId}`, {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://rivaloutranker20-production.up.railway.app'
+        const response = await fetch(`${apiUrl}/api/audit/${auditId}`, {
           headers
         })
 
