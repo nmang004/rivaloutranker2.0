@@ -158,15 +158,15 @@ class EnterpriseSecurityService {
       timestamp: new Date().toISOString(),
       eventType,
       severity: this.getEventSeverity(eventType),
-      userId: req.user?.id,
-      userEmail: req.user?.email,
+      userId: (req as any).user?.id,
+      userEmail: (req as any).user?.email,
       ipAddress: this.getClientIP(req),
       userAgent: req.get('User-Agent') || 'unknown',
       resource: req.path,
       action: req.method,
       details,
       outcome,
-      sessionId: req.sessionID,
+      sessionId: (req as any).sessionID,
       geolocation: await this.getGeolocation(this.getClientIP(req))
     };
 

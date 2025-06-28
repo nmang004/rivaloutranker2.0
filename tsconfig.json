@@ -30,7 +30,7 @@
       "@/server/*": ["./server/*"],
       "@/app/*": ["./app/*"]
     },
-    "types": ["node", "jest", "@testing-library/jest-dom"]
+    "skipLibCheck": true
   },
   "include": [
     "next-env.d.ts",
