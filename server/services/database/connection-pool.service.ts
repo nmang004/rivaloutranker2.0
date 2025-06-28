@@ -43,34 +43,70 @@ class ConnectionPoolService {
   };
 
   constructor() {
-    const poolConfig: PoolConfig = {
-      // Connection settings
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '5432'),
-      database: process.env.DB_NAME || 'rival_outranker',
-      user: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD,
-      
-      // Connection pool settings for high performance
-      min: parseInt(process.env.DB_POOL_MIN || '5'),          // Minimum connections
-      max: parseInt(process.env.DB_POOL_MAX || '50'),         // Maximum connections
-      idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT || '30000'), // 30 seconds
-      connectionTimeoutMillis: parseInt(process.env.DB_CONNECT_TIMEOUT || '10000'), // 10 seconds
-      
-      // Query optimization
-      query_timeout: parseInt(process.env.DB_QUERY_TIMEOUT || '60000'), // 60 seconds
-      statement_timeout: parseInt(process.env.DB_STATEMENT_TIMEOUT || '30000'), // 30 seconds
-      
-      // SSL configuration for production
-      ssl: process.env.NODE_ENV === 'production' ? {
-        rejectUnauthorized: false
-      } : false,
-      
-      // Advanced pool settings
-      allowExitOnIdle: false,
-      keepAlive: true,
-      keepAliveInitialDelayMillis: 0
-    };
+    console.log('[Database] Initializing database connection pool...');
+    console.log('[Database] DATABASE_URL:', process.env.DATABASE_URL ? 'Set' : 'Not set');
+    console.log('[Database] DB_HOST:', process.env.DB_HOST || 'Not set');
+    
+    let poolConfig: PoolConfig;
+
+    if (process.env.DATABASE_URL) {
+      // Use Railway's DATABASE_URL (preferred method)
+      console.log('[Database] Using DATABASE_URL for connection');
+      poolConfig = {
+        connectionString: process.env.DATABASE_URL,
+        
+        // Connection pool settings for high performance
+        min: parseInt(process.env.DB_POOL_MIN || '5'),          // Minimum connections
+        max: parseInt(process.env.DB_POOL_MAX || '50'),         // Maximum connections
+        idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT || '30000'), // 30 seconds
+        connectionTimeoutMillis: parseInt(process.env.DB_CONNECT_TIMEOUT || '10000'), // 10 seconds
+        
+        // Query optimization
+        query_timeout: parseInt(process.env.DB_QUERY_TIMEOUT || '60000'), // 60 seconds
+        statement_timeout: parseInt(process.env.DB_STATEMENT_TIMEOUT || '30000'), // 30 seconds
+        
+        // SSL configuration for production
+        ssl: process.env.NODE_ENV === 'production' ? {
+          rejectUnauthorized: false
+        } : false,
+        
+        // Advanced pool settings
+        allowExitOnIdle: false,
+        keepAlive: true,
+        keepAliveInitialDelayMillis: 0
+      };
+    } else {
+      // Fallback to individual environment variables
+      console.log('[Database] Using individual DB environment variables');
+      poolConfig = {
+        // Connection settings
+        host: process.env.DB_HOST || 'localhost',
+        port: parseInt(process.env.DB_PORT || '5432'),
+        database: process.env.DB_NAME || 'rival_outranker',
+        user: process.env.DB_USER || 'postgres',
+        password: process.env.DB_PASSWORD,
+        
+        // Connection pool settings for high performance
+        min: parseInt(process.env.DB_POOL_MIN || '5'),          // Minimum connections
+        max: parseInt(process.env.DB_POOL_MAX || '50'),         // Maximum connections
+        idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT || '30000'), // 30 seconds
+        connectionTimeoutMillis: parseInt(process.env.DB_CONNECT_TIMEOUT || '10000'), // 10 seconds
+        
+        // Query optimization
+        query_timeout: parseInt(process.env.DB_QUERY_TIMEOUT || '60000'), // 60 seconds
+        statement_timeout: parseInt(process.env.DB_STATEMENT_TIMEOUT || '30000'), // 30 seconds
+        
+        // SSL configuration for production
+        ssl: process.env.NODE_ENV === 'production' ? {
+          rejectUnauthorized: false
+        } : false,
+        
+        // Advanced pool settings
+        allowExitOnIdle: false,
+        keepAlive: true,
+        keepAliveInitialDelayMillis: 0
+      };
+    }
 
     this.pool = new Pool(poolConfig);
     this.setupEventHandlers();
