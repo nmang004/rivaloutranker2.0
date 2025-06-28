@@ -51,7 +51,7 @@ class RedisService {
       redisConfig = {
         enableReadyCheck: false, // Disable ready check for Railway
         maxRetriesPerRequest: 5,
-        lazyConnect: false, // Connect immediately
+        lazyConnect: true, // Use lazy connect to avoid double connection
         keyPrefix: 'rival-outranker:',
         connectTimeout: 30000, // Increased timeout
         commandTimeout: 10000,
@@ -71,7 +71,7 @@ class RedisService {
       redisConfig = {
         enableReadyCheck: false, // Disable ready check for Railway
         maxRetriesPerRequest: 5,
-        lazyConnect: false, // Connect immediately
+        lazyConnect: true, // Use lazy connect to avoid double connection
         keyPrefix: 'rival-outranker:',
         connectTimeout: 30000, // Increased timeout
         commandTimeout: 10000,
