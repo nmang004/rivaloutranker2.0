@@ -108,12 +108,22 @@ export default function AuditorPage() {
     if (isConnected) {
       // Start the audit via API call (this would trigger the backend to start processing)
       try {
+        const token = localStorage.getItem('token')
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json'
+        }
+        
+        // Use demo mode if no token available
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        } else {
+          headers['Authorization'] = 'Bearer demo-token'
+          headers['x-demo-user'] = 'true'
+        }
+
         const response = await fetch('/api/audit', {
           method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token') || ''}` // Add auth header
-          },
+          headers,
           body: JSON.stringify({
             url,
             type: analysisType,

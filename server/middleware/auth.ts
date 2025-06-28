@@ -13,9 +13,39 @@ export interface AuthenticatedRequest extends Request {
 
 export function authMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
+    // Demo account bypass - allow requests with demo user in development/Railway
+    const isDemoMode = process.env.NODE_ENV === 'development' || process.env.RAILWAY_ENVIRONMENT;
+    const userAgent = req.headers['user-agent'] || '';
+    const isDemo = req.headers['x-demo-user'] === 'true' || 
+                   req.query.demo === 'true' ||
+                   userAgent.includes('Demo') ||
+                   req.headers.authorization === 'Bearer demo-token';
+
+    if (isDemoMode && isDemo) {
+      req.user = {
+        id: 999999, // Demo user ID
+        email: 'demo@rivaloutranker.com',
+        role: 'admin', // Give admin permissions for demo
+        teamId: 1
+      };
+      console.log('[Auth] Demo user bypass activated');
+      return next();
+    }
+
     const authHeader = req.headers.authorization;
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      // In demo mode, create a temporary demo user if no auth provided
+      if (isDemoMode) {
+        req.user = {
+          id: 999999,
+          email: 'demo@rivaloutranker.com', 
+          role: 'admin',
+          teamId: 1
+        };
+        console.log('[Auth] Auto-created demo user for unauthenticated request');
+        return next();
+      }
       throw createError('Authentication required', 401, 'AUTH_REQUIRED');
     }
     

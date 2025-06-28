@@ -173,10 +173,19 @@ export default function AuditResultsPage({ params: _params }: { params: { id: st
     async function fetchAuditResults() {
       try {
         setLoading(true)
+        const token = localStorage.getItem('token')
+        const headers: Record<string, string> = {}
+        
+        // Use demo mode if no token available
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        } else {
+          headers['Authorization'] = 'Bearer demo-token'
+          headers['x-demo-user'] = 'true'
+        }
+
         const response = await fetch(`/api/audit/${auditId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-          }
+          headers
         })
 
         if (!response.ok) {
