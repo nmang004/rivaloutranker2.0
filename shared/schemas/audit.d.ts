@@ -2000,14 +2000,14 @@ export declare const enhancedAuditResultSchema: z.ZodObject<{
         errors: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
         pagesAnalyzed: number;
-        errors?: string[] | undefined;
         maxPagesReached?: boolean | undefined;
         crawlDuration?: number | undefined;
+        errors?: string[] | undefined;
     }, {
         pagesAnalyzed: number;
-        errors?: string[] | undefined;
         maxPagesReached?: boolean | undefined;
         crawlDuration?: number | undefined;
+        errors?: string[] | undefined;
     }>>;
     aiInsights: z.ZodOptional<z.ZodObject<{
         contentAnalysis: z.ZodObject<{
@@ -2558,9 +2558,9 @@ export declare const enhancedAuditResultSchema: z.ZodObject<{
     } | undefined;
     crawlMetadata?: {
         pagesAnalyzed: number;
-        errors?: string[] | undefined;
         maxPagesReached?: boolean | undefined;
         crawlDuration?: number | undefined;
+        errors?: string[] | undefined;
     } | undefined;
 }, {
     contentQuality: {
@@ -2917,9 +2917,9 @@ export declare const enhancedAuditResultSchema: z.ZodObject<{
     } | undefined;
     crawlMetadata?: {
         pagesAnalyzed: number;
-        errors?: string[] | undefined;
         maxPagesReached?: boolean | undefined;
         crawlDuration?: number | undefined;
+        errors?: string[] | undefined;
     } | undefined;
 }>;
 export declare const audits: import("drizzle-orm/pg-core").PgTableWithColumns<{
@@ -3428,9 +3428,9 @@ export declare const audits: import("drizzle-orm/pg-core").PgTableWithColumns<{
                 } | undefined;
                 crawlMetadata?: {
                     pagesAnalyzed: number;
-                    errors?: string[] | undefined;
                     maxPagesReached?: boolean | undefined;
                     crawlDuration?: number | undefined;
+                    errors?: string[] | undefined;
                 } | undefined;
             };
             driverParam: unknown;
@@ -3799,9 +3799,9 @@ export declare const audits: import("drizzle-orm/pg-core").PgTableWithColumns<{
                 } | undefined;
                 crawlMetadata?: {
                     pagesAnalyzed: number;
-                    errors?: string[] | undefined;
                     maxPagesReached?: boolean | undefined;
                     crawlDuration?: number | undefined;
+                    errors?: string[] | undefined;
                 } | undefined;
             };
         }>;
@@ -4485,9 +4485,9 @@ export declare const auditHistory: import("drizzle-orm/pg-core").PgTableWithColu
                 } | undefined;
                 crawlMetadata?: {
                     pagesAnalyzed: number;
-                    errors?: string[] | undefined;
                     maxPagesReached?: boolean | undefined;
                     crawlDuration?: number | undefined;
+                    errors?: string[] | undefined;
                 } | undefined;
             };
             driverParam: unknown;
@@ -4856,9 +4856,9 @@ export declare const auditHistory: import("drizzle-orm/pg-core").PgTableWithColu
                 } | undefined;
                 crawlMetadata?: {
                     pagesAnalyzed: number;
-                    errors?: string[] | undefined;
                     maxPagesReached?: boolean | undefined;
                     crawlDuration?: number | undefined;
+                    errors?: string[] | undefined;
                 } | undefined;
             };
         }>;
@@ -5826,9 +5826,9 @@ export declare const insertAuditSchema: import("drizzle-zod").BuildSchema<"inser
             } | undefined;
             crawlMetadata?: {
                 pagesAnalyzed: number;
-                errors?: string[] | undefined;
                 maxPagesReached?: boolean | undefined;
                 crawlDuration?: number | undefined;
+                errors?: string[] | undefined;
             } | undefined;
         };
         driverParam: unknown;
@@ -6197,9 +6197,9 @@ export declare const insertAuditSchema: import("drizzle-zod").BuildSchema<"inser
             } | undefined;
             crawlMetadata?: {
                 pagesAnalyzed: number;
-                errors?: string[] | undefined;
                 maxPagesReached?: boolean | undefined;
                 crawlDuration?: number | undefined;
+                errors?: string[] | undefined;
             } | undefined;
         };
     }>;
@@ -6973,9 +6973,9 @@ export declare const selectAuditSchema: import("drizzle-zod").BuildSchema<"selec
             } | undefined;
             crawlMetadata?: {
                 pagesAnalyzed: number;
-                errors?: string[] | undefined;
                 maxPagesReached?: boolean | undefined;
                 crawlDuration?: number | undefined;
+                errors?: string[] | undefined;
             } | undefined;
         };
         driverParam: unknown;
@@ -7344,9 +7344,9 @@ export declare const selectAuditSchema: import("drizzle-zod").BuildSchema<"selec
             } | undefined;
             crawlMetadata?: {
                 pagesAnalyzed: number;
-                errors?: string[] | undefined;
                 maxPagesReached?: boolean | undefined;
                 crawlDuration?: number | undefined;
+                errors?: string[] | undefined;
             } | undefined;
         };
     }>;
@@ -8025,9 +8025,9 @@ export declare const insertAuditHistorySchema: import("drizzle-zod").BuildSchema
             } | undefined;
             crawlMetadata?: {
                 pagesAnalyzed: number;
-                errors?: string[] | undefined;
                 maxPagesReached?: boolean | undefined;
                 crawlDuration?: number | undefined;
+                errors?: string[] | undefined;
             } | undefined;
         };
         driverParam: unknown;
@@ -8396,9 +8396,9 @@ export declare const insertAuditHistorySchema: import("drizzle-zod").BuildSchema
             } | undefined;
             crawlMetadata?: {
                 pagesAnalyzed: number;
-                errors?: string[] | undefined;
                 maxPagesReached?: boolean | undefined;
                 crawlDuration?: number | undefined;
+                errors?: string[] | undefined;
             } | undefined;
         };
     }>;
@@ -8861,9 +8861,9 @@ export declare const selectAuditHistorySchema: import("drizzle-zod").BuildSchema
             } | undefined;
             crawlMetadata?: {
                 pagesAnalyzed: number;
-                errors?: string[] | undefined;
                 maxPagesReached?: boolean | undefined;
                 crawlDuration?: number | undefined;
+                errors?: string[] | undefined;
             } | undefined;
         };
         driverParam: unknown;
@@ -9232,9 +9232,9 @@ export declare const selectAuditHistorySchema: import("drizzle-zod").BuildSchema
             } | undefined;
             crawlMetadata?: {
                 pagesAnalyzed: number;
-                errors?: string[] | undefined;
                 maxPagesReached?: boolean | undefined;
                 crawlDuration?: number | undefined;
+                errors?: string[] | undefined;
             } | undefined;
         };
     }>;

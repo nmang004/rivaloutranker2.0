@@ -28,7 +28,7 @@
     "dev:server": "tsx watch server/index.ts",
     "build": "npm run build:next && npm run build:server",
     "build:next": "next build",
-    "build:server": "tsc --project tsconfig.server.json",
+    "build:server": "tsc --project tsconfig.server.json && node scripts/fix-imports.cjs",
     "start": "NODE_ENV=production node dist/server/index.js",
     "preview": "next start",
     "lint": "next lint",
