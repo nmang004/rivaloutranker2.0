@@ -147,7 +147,9 @@
     "zustand": "^5.0.2",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.47",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.17",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^15.1.5"
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^15.1.5",
@@ -187,8 +189,6 @@
     "concurrently": "^9.1.0",
     "cross-env": "^7.0.3",
     "drizzle-kit": "^0.31.1",
-    "eslint": "^8.57.1",
-    "eslint-config-next": "^15.1.5",
     "prettier": "^3.4.2",
     "rimraf": "^6.0.1",
     "typescript": "^5.6.3",

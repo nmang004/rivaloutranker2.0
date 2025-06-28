@@ -41,6 +41,9 @@
   "exclude": [
     "node_modules",
     "dist",
-    ".next"
+    ".next",
+    "server",
+    "drizzle.config.ts",
+    "drizzle"
   ]
 }

@@ -1,0 +1,10 @@
+server/
+dist/
+drizzle/
+drizzle.config.ts
+tsconfig.server.json
+scripts/fix-imports.cjs
+Dockerfile
+docker-compose.yml
+nginx/
+*.md

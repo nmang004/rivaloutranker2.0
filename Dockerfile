@@ -39,7 +39,7 @@ RUN npm ci
 # Build stage
 FROM build-deps AS build
 COPY . .
-RUN npm run build
+RUN npm run build:full
 
 # Production stage
 FROM base AS production
