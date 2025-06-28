@@ -38,8 +38,29 @@ class RedisService {
     // Parse Railway Redis URL format
     let redisConfig: any;
     
-    if (process.env.REDIS_URL) {
-      // Use full URL (Railway format)
+    if (process.env.REDIS_URL && process.env.REDIS_URL.includes('railway.internal')) {
+      // Railway internal networking - use public URL instead
+      const publicUrl = process.env.REDIS_PUBLIC_URL || process.env.REDIS_URL;
+      
+      redisConfig = {
+        enableReadyCheck: false, // Disable ready check for Railway
+        maxRetriesPerRequest: 5,
+        lazyConnect: false, // Connect immediately
+        keyPrefix: 'rival-outranker:',
+        connectTimeout: 30000, // Increased timeout
+        commandTimeout: 10000,
+        retryDelayOnFailover: 1000,
+        family: 4, // Force IPv4
+        keepAlive: 30000,
+        reconnectOnError: (err) => {
+          const targetError = 'READONLY';
+          return err.message.includes(targetError);
+        }
+      };
+      
+      this.client = new Redis(publicUrl, redisConfig);
+    } else if (process.env.REDIS_URL) {
+      // Standard Redis URL
       redisConfig = {
         enableReadyCheck: true,
         maxRetriesPerRequest: 3,

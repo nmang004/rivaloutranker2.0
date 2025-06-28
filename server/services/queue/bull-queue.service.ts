@@ -149,16 +149,28 @@ class BullQueueService {
     }
 
     try {
-      const redisConfig = {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379'),
-        password: process.env.REDIS_PASSWORD,
-        db: parseInt(process.env.REDIS_DB || '1'), // Use different DB for queues
-        maxRetriesPerRequest: 3,
-        retryDelayOnFailover: 100,
-        connectTimeout: 10000,
-        commandTimeout: 5000
-      };
+      let redisConfig: any;
+
+      if (process.env.REDIS_URL && process.env.REDIS_URL.includes('railway.internal')) {
+        // Railway Redis connection
+        const publicUrl = process.env.REDIS_PUBLIC_URL || process.env.REDIS_URL;
+        redisConfig = publicUrl;
+      } else if (process.env.REDIS_URL) {
+        // Standard Redis URL
+        redisConfig = process.env.REDIS_URL;
+      } else {
+        // Individual config
+        redisConfig = {
+          host: process.env.REDIS_HOST || 'localhost',
+          port: parseInt(process.env.REDIS_PORT || '6379'),
+          password: process.env.REDIS_PASSWORD,
+          db: parseInt(process.env.REDIS_DB || '1'), // Use different DB for queues
+          maxRetriesPerRequest: 3,
+          retryDelayOnFailover: 100,
+          connectTimeout: 10000,
+          commandTimeout: 5000
+        };
+      }
 
       // Initialize all queues
       for (const [queueType, config] of Object.entries(this.queueConfigs)) {
