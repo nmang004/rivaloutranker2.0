@@ -32,13 +32,13 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     subscribeToAuditError
   } = useWebSocket({
     autoReconnect: true,
-    maxReconnectAttempts: 5,
-    reconnectDelay: 3000
+    maxReconnectAttempts: 3,
+    reconnectDelay: 5000
   })
 
-  // Show connection status notifications
+  // Show connection status notifications (only in development)
   useEffect(() => {
-    if (isConnected && !hasShownConnectionSuccess) {
+    if (process.env.NODE_ENV === 'development' && isConnected && !hasShownConnectionSuccess) {
       toast.success('Connected to real-time updates', {
         description: 'You\'ll receive live progress updates for your audits',
         duration: 3000
@@ -49,10 +49,11 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   }, [isConnected, hasShownConnectionSuccess])
 
   useEffect(() => {
-    if (connectionError && !hasShownConnectionError) {
+    // Only show error if we're actually trying to connect (development or if WS URL is provided)
+    if (connectionError && !hasShownConnectionError && process.env.NEXT_PUBLIC_WS_URL) {
       toast.error('Connection lost', {
-        description: 'Real-time updates unavailable. Attempting to reconnect...',
-        duration: 5000
+        description: 'Real-time updates unavailable. Will retry in background.',
+        duration: 3000
       })
       setHasShownConnectionError(true)
     }

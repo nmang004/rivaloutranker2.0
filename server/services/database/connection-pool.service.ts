@@ -116,10 +116,19 @@ class ConnectionPoolService {
     this.pool.on('connect', (client) => {
       logger.debug('New client connected to database pool');
       
-      // Set up client-specific optimizations
-      client.query('SET statement_timeout = $1', [process.env.DB_STATEMENT_TIMEOUT || '30000']);
-      client.query('SET lock_timeout = $1', ['10000']); // 10 seconds
-      client.query('SET idle_in_transaction_session_timeout = $1', ['300000']); // 5 minutes
+      // Set up client-specific optimizations using direct SQL
+      const statementTimeout = process.env.DB_STATEMENT_TIMEOUT || '30000';
+      client.query(`SET statement_timeout = ${statementTimeout}`).catch(err => {
+        logger.warn('Failed to set statement_timeout', undefined, err.message);
+      });
+      
+      client.query('SET lock_timeout = 10000').catch(err => {
+        logger.warn('Failed to set lock_timeout', undefined, err.message);
+      });
+      
+      client.query('SET idle_in_transaction_session_timeout = 300000').catch(err => {
+        logger.warn('Failed to set idle_in_transaction_session_timeout', undefined, err.message);
+      });
     });
 
     this.pool.on('acquire', (client) => {

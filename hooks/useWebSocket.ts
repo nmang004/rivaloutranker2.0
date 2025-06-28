@@ -30,12 +30,13 @@ interface UseWebSocketOptions {
 
 export function useWebSocket(options: UseWebSocketOptions = {}) {
   const {
-    url = process.env.NODE_ENV === 'production' 
-      ? 'wss://api.rivaloutranker.com/ws' 
-      : 'ws://localhost:3001/ws',
+    url = process.env.NEXT_PUBLIC_WS_URL || 
+         (typeof window !== 'undefined' && window.location.hostname === 'localhost' 
+           ? 'ws://localhost:3001/ws' 
+           : null), // Disable WebSocket in production if no URL provided
     autoReconnect = true,
-    maxReconnectAttempts = 5,
-    reconnectDelay = 3000
+    maxReconnectAttempts = 3, // Reduced attempts
+    reconnectDelay = 5000 // Increased delay
   } = options
 
   const [socket, setSocket] = useState<WebSocket | null>(null)
@@ -49,7 +50,14 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   const heartbeatIntervalRef = useRef<NodeJS.Timeout>()
 
   const connect = useCallback(() => {
+    // Skip connection if no URL provided
+    if (!url) {
+      console.log('WebSocket URL not provided, skipping connection')
+      return
+    }
+    
     try {
+      console.log('Attempting WebSocket connection to:', url)
       const ws = new WebSocket(url)
       
       ws.onopen = () => {
@@ -95,12 +103,15 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
           clearInterval(heartbeatIntervalRef.current)
         }
 
-        if (autoReconnect && reconnectAttempts < maxReconnectAttempts && !event.wasClean) {
+        if (autoReconnect && reconnectAttempts < maxReconnectAttempts && !event.wasClean && url) {
           setReconnectAttempts(prev => prev + 1)
           reconnectTimeoutRef.current = setTimeout(() => {
             console.log(`Attempting to reconnect... (${reconnectAttempts + 1}/${maxReconnectAttempts})`)
             connect()
           }, reconnectDelay)
+        } else if (reconnectAttempts >= maxReconnectAttempts) {
+          console.log('Max reconnection attempts reached, giving up')
+          setConnectionError('Unable to establish WebSocket connection')
         }
         
         console.log('WebSocket disconnected')
@@ -201,14 +212,18 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     })
   }, [subscribe])
 
-  // Connect on mount
+  // Connect on mount only if URL is provided
   useEffect(() => {
-    connect()
+    if (url) {
+      connect()
+    } else {
+      console.log('WebSocket disabled: No URL provided')
+    }
     
     return () => {
       disconnect()
     }
-  }, [connect, disconnect])
+  }, [connect, disconnect, url])
 
   // Cleanup on unmount
   useEffect(() => {
