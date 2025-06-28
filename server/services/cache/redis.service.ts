@@ -32,15 +32,21 @@ class RedisService {
   };
 
   constructor() {
+    console.log('[Redis] Initializing Redis connection...');
+    console.log('[Redis] REDIS_URL:', process.env.REDIS_URL ? process.env.REDIS_URL.substring(0, 20) + '...' : 'undefined');
+    console.log('[Redis] REDIS_PUBLIC_URL:', process.env.REDIS_PUBLIC_URL ? process.env.REDIS_PUBLIC_URL.substring(0, 20) + '...' : 'undefined');
+    
     // Handle Railway Redis connection
     const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
     
     // Parse Railway Redis URL format
     let redisConfig: any;
+    let connectionUrl: string;
     
     if (process.env.REDIS_URL && process.env.REDIS_URL.includes('railway.internal')) {
       // Railway internal networking - use public URL instead
-      const publicUrl = process.env.REDIS_PUBLIC_URL || process.env.REDIS_URL;
+      connectionUrl = process.env.REDIS_PUBLIC_URL || process.env.REDIS_URL;
+      console.log('[Redis] Using Railway public URL for connection');
       
       redisConfig = {
         enableReadyCheck: false, // Disable ready check for Railway
@@ -52,15 +58,36 @@ class RedisService {
         retryDelayOnFailover: 1000,
         family: 4, // Force IPv4
         keepAlive: 30000,
-        reconnectOnError: (err) => {
+        reconnectOnError: (err: any) => {
           const targetError = 'READONLY';
           return err.message.includes(targetError);
         }
       };
+    } else if (process.env.REDIS_PUBLIC_URL && process.env.REDIS_PUBLIC_URL.includes('rlwy.net')) {
+      // Railway public URL detected
+      connectionUrl = process.env.REDIS_PUBLIC_URL;
+      console.log('[Redis] Using Railway public URL (rlwy.net) for connection');
       
-      this.client = new Redis(publicUrl, redisConfig);
+      redisConfig = {
+        enableReadyCheck: false, // Disable ready check for Railway
+        maxRetriesPerRequest: 5,
+        lazyConnect: false, // Connect immediately
+        keyPrefix: 'rival-outranker:',
+        connectTimeout: 30000, // Increased timeout
+        commandTimeout: 10000,
+        retryDelayOnFailover: 1000,
+        family: 4, // Force IPv4
+        keepAlive: 30000,
+        reconnectOnError: (err: any) => {
+          const targetError = 'READONLY';
+          return err.message.includes(targetError);
+        }
+      };
     } else if (process.env.REDIS_URL) {
       // Standard Redis URL
+      connectionUrl = redisUrl;
+      console.log('[Redis] Using standard Redis URL');
+      
       redisConfig = {
         enableReadyCheck: true,
         maxRetriesPerRequest: 3,
@@ -72,10 +99,10 @@ class RedisService {
         family: 4, // Force IPv4
         keepAlive: 30000
       };
-      
-      this.client = new Redis(redisUrl, redisConfig);
     } else {
       // Fallback to individual config
+      console.log('[Redis] Using individual config fallback');
+      
       redisConfig = {
         host: process.env.REDIS_HOST || 'localhost',
         port: parseInt(process.env.REDIS_PORT || '6379'),
@@ -92,8 +119,12 @@ class RedisService {
       };
       
       this.client = new Redis(redisConfig);
+      this.setupEventHandlers();
+      return;
     }
 
+    console.log('[Redis] Connecting to URL:', connectionUrl ? connectionUrl.substring(0, 30) + '...' : 'undefined');
+    this.client = new Redis(connectionUrl, redisConfig);
     this.setupEventHandlers();
   }
 

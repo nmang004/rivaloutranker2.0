@@ -6,6 +6,7 @@ const nextConfig = {
   serverExternalPackages: ['puppeteer', 'cheerio'],
   poweredByHeader: false,
   compress: true,
+  productionBrowserSourceMaps: false,
   images: {
     domains: ['localhost'],
     formats: ['image/webp', 'image/avif'],
