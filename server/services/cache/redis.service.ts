@@ -32,16 +32,46 @@ class RedisService {
   };
 
   constructor() {
+    // Handle Railway Redis connection
     const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
     
-    this.client = new Redis(redisUrl, {
-      enableReadyCheck: true,
-      maxRetriesPerRequest: 3,
-      lazyConnect: true,
-      keyPrefix: 'rival-outranker:',
-      connectTimeout: 10000,
-      commandTimeout: 5000
-    });
+    // Parse Railway Redis URL format
+    let redisConfig: any;
+    
+    if (process.env.REDIS_URL) {
+      // Use full URL (Railway format)
+      redisConfig = {
+        enableReadyCheck: true,
+        maxRetriesPerRequest: 3,
+        lazyConnect: true,
+        keyPrefix: 'rival-outranker:',
+        connectTimeout: 10000,
+        commandTimeout: 5000,
+        retryDelayOnFailover: 100,
+        family: 4, // Force IPv4
+        keepAlive: 30000
+      };
+      
+      this.client = new Redis(redisUrl, redisConfig);
+    } else {
+      // Fallback to individual config
+      redisConfig = {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: parseInt(process.env.REDIS_PORT || '6379'),
+        password: process.env.REDIS_PASSWORD,
+        enableReadyCheck: true,
+        maxRetriesPerRequest: 3,
+        lazyConnect: true,
+        keyPrefix: 'rival-outranker:',
+        connectTimeout: 10000,
+        commandTimeout: 5000,
+        retryDelayOnFailover: 100,
+        family: 4,
+        keepAlive: 30000
+      };
+      
+      this.client = new Redis(redisConfig);
+    }
 
     this.setupEventHandlers();
   }

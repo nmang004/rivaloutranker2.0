@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
@@ -36,7 +36,11 @@ export const metadata: Metadata = {
     title: 'RivalOutRanker 2.0 - Professional SEO Analysis Platform',
     description: 'The most sophisticated SEO analysis platform with 140+ factor analysis, AI-powered insights, and enterprise-grade features.',
   },
-  viewport: 'width=device-width, initial-scale=1',
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#ffffff' },
     { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' }
