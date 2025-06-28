@@ -120,6 +120,8 @@ export default function AuditorPage() {
         }
 
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://rivaloutranker20-production.up.railway.app'
+        console.log('[Audit] Environment NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL)
+        console.log('[Audit] Using API URL:', apiUrl)
         console.log('[Audit] Starting audit request to:', `${apiUrl}/api/audit`)
         console.log('[Audit] Headers:', headers)
         console.log('[Audit] Payload:', { url, type: analysisType, title: `SEO Audit - ${url}` })

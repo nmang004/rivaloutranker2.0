@@ -11,14 +11,6 @@ const nextConfig = {
     domains: ['localhost'],
     formats: ['image/webp', 'image/avif'],
   },
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL || process.env.SERVER_URL || 'http://localhost:3001'}/api/:path*`,
-      },
-    ];
-  },
   async headers() {
     return [
       {
@@ -100,6 +92,8 @@ const nextConfig = {
   },
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://rivaloutranker20-production.up.railway.app',
+    NEXT_PUBLIC_WS_URL: process.env.NEXT_PUBLIC_WS_URL || 'wss://rivaloutranker20-production.up.railway.app/ws',
   },
 };
 
