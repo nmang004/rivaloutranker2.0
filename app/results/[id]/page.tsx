@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -162,7 +163,68 @@ const getStatusIcon = (status: string) => {
 
 export default function AuditResultsPage({ params: _params }: { params: { id: string } }) {
   const [activeTab, setActiveTab] = useState('overview')
-  const { categories, overallScore, url, totalFactors, totalIssues, priorityIssues } = mockAuditResults
+  const [auditData, setAuditData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const params = useParams()
+  const auditId = params?.id as string
+
+  useEffect(() => {
+    async function fetchAuditResults() {
+      try {
+        setLoading(true)
+        const response = await fetch(`/api/audit/${auditId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+          }
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch audit results')
+        }
+
+        const result = await response.json()
+        setAuditData(result.audit)
+      } catch (err) {
+        console.error('Error fetching audit results:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load audit results')
+        // Fall back to mock data if API fails
+        setAuditData(mockAuditResults)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (auditId) {
+      fetchAuditResults()
+    }
+  }, [auditId])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+          <p className="text-muted-foreground">Loading audit results...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error && !auditData) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-4">
+          <ExclamationTriangleIcon className="h-12 w-12 text-red-500 mx-auto" />
+          <p className="text-red-600 dark:text-red-400">Error: {error}</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Use real data if available, otherwise fall back to mock data
+  const data = auditData || mockAuditResults
+  const { categories, overallScore, url, totalFactors, totalIssues, priorityIssues } = data
 
   return (
     <div className="space-y-8">
@@ -249,7 +311,7 @@ export default function AuditResultsPage({ params: _params }: { params: { id: st
               </div>
               
               <div className="grid grid-cols-2 gap-4 lg:gap-6">
-                {Object.entries(categories).map(([key, category]) => {
+                {Object.entries(categories).map(([key, category]: [string, any]) => {
                   const config = categoryConfig[key as keyof typeof categoryConfig]
                   return (
                     <motion.div

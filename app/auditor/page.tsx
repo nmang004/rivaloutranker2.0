@@ -102,72 +102,86 @@ export default function AuditorPage() {
     setCurrentStep(0)
     setSteps(analysisSteps.map(step => ({ ...step, status: 'pending', progress: 0 })))
 
-    // Generate a unique audit ID
-    const auditId = `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    setCurrentAuditId(auditId)
+    let auditId: string | null = null
 
     // If WebSocket is connected, use real-time updates
     if (isConnected) {
-      // Subscribe to real-time progress updates
-      const unsubscribeProgress = subscribeToAuditProgress(auditId, (progress) => {
-        setCurrentStep(progress.currentStep)
-        setSteps(prev => prev.map((step, index) => {
-          if (index === progress.currentStep) {
-            return { ...step, status: 'running', progress: progress.stepProgress }
-          } else if (index < progress.currentStep) {
-            return { ...step, status: 'completed', progress: 100 }
-          }
-          return step
-        }))
-      })
-
-      // Subscribe to completion
-      const unsubscribeComplete = subscribeToAuditComplete(auditId, (_result) => {
-        setSteps(prev => prev.map(step => ({ ...step, status: 'completed', progress: 100 })))
-        setTimeout(() => {
-          router.push(`/results/${auditId}`)
-        }, 1000)
-      })
-
-      // Subscribe to errors
-      const unsubscribeError = subscribeToAuditError(auditId, (_error) => {
-        setSteps(prev => prev.map((step, index) => 
-          index === currentStep 
-            ? { ...step, status: 'error', progress: 0 }
-            : step
-        ))
-        setIsAnalyzing(false)
-      })
-
       // Start the audit via API call (this would trigger the backend to start processing)
       try {
-        const response = await fetch('/api/audit/start', {
+        const response = await fetch('/api/audit', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token') || ''}` // Add auth header
+          },
           body: JSON.stringify({
-            auditId,
             url,
             type: analysisType,
-            includeAI
+            title: `SEO Audit - ${url}`,
+            config: {
+              maxPages: analysisType === 'comprehensive' ? 25 : 10,
+              includeSubdomains: false,
+              analyzeCompetitors: false
+            }
           })
         })
 
         if (!response.ok) {
           throw new Error('Failed to start audit')
         }
+
+        const result = await response.json()
+        auditId = result.auditId?.toString()
+        setCurrentAuditId(auditId)
+
+        if (auditId) {
+          // Subscribe to real-time progress updates after getting the audit ID
+          const unsubscribeProgress = subscribeToAuditProgress(auditId, (progress) => {
+            setCurrentStep(progress.currentStep || 0)
+            setSteps(prev => prev.map((step, index) => {
+              if (index === progress.currentStep) {
+                return { ...step, status: 'running', progress: progress.stepProgress || 0 }
+              } else if (index < (progress.currentStep || 0)) {
+                return { ...step, status: 'completed', progress: 100 }
+              }
+              return step
+            }))
+          })
+
+          // Subscribe to completion
+          const unsubscribeComplete = subscribeToAuditComplete(auditId, (_result) => {
+            setSteps(prev => prev.map(step => ({ ...step, status: 'completed', progress: 100 })))
+            setTimeout(() => {
+              router.push(`/results/${auditId}`)
+            }, 1000)
+          })
+
+          // Subscribe to errors
+          const unsubscribeError = subscribeToAuditError(auditId, (_error) => {
+            setSteps(prev => prev.map((step, index) => 
+              index === currentStep 
+                ? { ...step, status: 'error', progress: 0 }
+                : step
+            ))
+            setIsAnalyzing(false)
+          })
+
+          // Cleanup subscriptions when component unmounts or analysis completes
+          return () => {
+            unsubscribeProgress()
+            unsubscribeComplete()
+            unsubscribeError()
+          }
+        }
       } catch (error) {
         console.error('Failed to start audit:', error)
         setIsAnalyzing(false)
       }
-
-      // Cleanup subscriptions when component unmounts or analysis completes
-      return () => {
-        unsubscribeProgress()
-        unsubscribeComplete()
-        unsubscribeError()
-      }
     } else {
       // Fallback to simulated progress if WebSocket is not connected
+      auditId = `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      setCurrentAuditId(auditId)
+      
       for (let i = 0; i < steps.length; i++) {
         setSteps(prev => prev.map((step, index) => 
           index === i 
